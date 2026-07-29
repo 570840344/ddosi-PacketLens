@@ -18,7 +18,7 @@
 </div>
 
 ---
-[简体中文](https://github.com/ddosi/PacketLens/README.md) | [English](https://github.com/ddosi/PacketLens/README_EN.md)
+[简体中文](README.md) | [English](README_EN.md)
 
 ### 📖 项目简介
 
