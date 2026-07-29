@@ -19,7 +19,7 @@
 </div>
 
 ---
-[简体中文](https://github.com/ddosi/PacketLens/README.md) | [English](https://github.com/ddosi/PacketLens/README_EN.md)
+[简体中文](README.md) | [English](README_EN.md)
 ### 📖 Project Overview
 
 **PacketLens** is a pure front-end pcap analysis tool designed for cybersecurity analysis and incident response. It brings the core capabilities of traditional desktop traffic analysis tools (like Wireshark) directly into the web browser.
