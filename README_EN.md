@@ -22,7 +22,7 @@
 ---
 [简体中文](README.md) | [English](README_EN.md)
 ### 📖 Project Overview
-
+![图片](https://www.ddosi.org/wp-content/uploads/2026/07/205404.webp)
 **PacketLens** is a pure front-end pcap analysis tool designed for cybersecurity analysis and incident response. It brings the core capabilities of traditional desktop traffic analysis tools (like Wireshark) directly into the web browser.
 
 No environment setup or back-end server is required. Simply open the HTML file or drag and drop a pcap file into the web page to complete the entire workflow from low-level protocol decoding to high-level threat triage. **All data is processed locally in the browser and never uploaded, ensuring absolute data security.**
