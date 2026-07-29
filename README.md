@@ -14,11 +14,11 @@
     <strong>🌐 官方网站 / 在线体验</strong>
   </a>
 </p>
-[简体中文](README.md) | [English](README_EN.md)
 
 </div>
 
 ---
+[简体中文](https://github.com/ddosi/PacketLens/README.md) | [English](https://github.com/ddosi/PacketLens/README_EN.md)
 
 ### 📖 项目简介
 
