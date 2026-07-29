@@ -1,7 +1,6 @@
 <div align="center">
   
 <h1>PacketLens 🔰雨苁ℒ🔰</h1>
-
 <h3>浏览器内极速 pcap 深度分析工作台</h3>
 
 <p>纯前端 · 零后端 · 离线可用 · HTTPS 解密 · 百万级数据包秒开</p>
@@ -15,6 +14,7 @@
     <strong>🌐 官方网站 / 在线体验</strong>
   </a>
 </p>
+[简体中文](README.md) | [English](README_EN.md)
 
 </div>
 
@@ -40,12 +40,31 @@
   - 交互式通信拓扑图（力导向布局）。
   - 态势研判作战台（攻击链阶段归类、资产风险收敛）。
   - 一键导出排版精美的 HTML/Markdown 分析报告。
+- **特点**：包含 IP 信息库（`GeoLite2-Country.mmdb` 和 `dbip-asn-lite-*.mmdb` 两个文件），支持在界面中直接显示 IP 归属国和 ASN 运营商信息。
 
-### 🚀 快速开始
 
-1. **下载release版本**：下载本仓库的 `packetlens.html` 单文件。
-2. **双击打开**：直接在浏览器中打开（推荐 Chrome / Edge）。
-3. **拖拽分析**：将你的 `.pcap` / `.pcapng` / `.cap` 文件拖入页面即可开始分析。
+### 快速开始(本地部署)
+
+- **使用方法**：由于浏览器安全策略限制，直接双击打开无法加载 `.mmdb` 文件，需进行本地部署。
+1. 在 [Releases](https://github.com/ddosi/PacketLens/releases) 页面下载最新版本.
+2. 安装 [Python](https://www.python.org/downloads/) 环境。
+3. 使用下面任意一种方法访问
+
+      A.方法一：使用 HTTP 访问（最简单）
+
+     在解压目录下运行命令：
+     ```bash
+     python -m http.server 80
+     ```
+     浏览器访问：[http://localhost/](http://localhost/) 或者[http://127.0.0.1/](http://127.0.0.1/)
+
+   B. 方法二：使用 HTTPS 访问（推荐，功能最完整）**
+     在解压目录下运行附带的脚本：
+     ```bash
+     python https.py
+     ```
+     脚本会自动调用系统 openssl 生成证书并启动服务。浏览器访问：[https://localhost:8443/](https://localhost:8443/) （浏览器会提示不安全，选择继续访问即可）。
+
 
 #### 🔑 如何解密 HTTPS 流量？
 现代 TLS 使用 ECDHE 前向保密，光有抓包文件无法解密。你需要从客户端侧获取会话密钥：
