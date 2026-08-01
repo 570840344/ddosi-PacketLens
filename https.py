@@ -7,6 +7,8 @@ import ssl
 import subprocess
 import webbrowser
 
+# 修复：禁用 SSL 密钥日志（解决 Windows 权限问题）
+os.environ['SSLKEYLOGFILE'] = ''
 # 兼容 Python 2 和 Python 3 的 HTTP 服务器模块
 if sys.version_info[0] == 3:
     from http.server import HTTPServer, SimpleHTTPRequestHandler
