@@ -1,90 +1,137 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import os
-import sys
 import ssl
-import subprocess
+import sys
+import datetime
 import webbrowser
 
-# 修复：禁用 SSL 密钥日志（解决 Windows 权限问题）
-os.environ['SSLKEYLOGFILE'] = ''
-# 兼容 Python 2 和 Python 3 的 HTTP 服务器模块
-if sys.version_info[0] == 3:
-    from http.server import HTTPServer, SimpleHTTPRequestHandler
-else:
-    from BaseHTTPServer import HTTPServer
-    from SimpleHTTPServer import SimpleHTTPRequestHandler
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+
+from cryptography import x509
+from cryptography.x509.oid import NameOID
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+
+
+# 禁止 SSLKEYLOGFILE
+os.environ["SSLKEYLOGFILE"] = ""
+
+CERT_FILE = "cert.pem"
+KEY_FILE = "key.pem"
+
 
 def create_self_signed_cert():
-    """调用系统 openssl 命令生成自签名证书，兼容 Python 2/3"""
+    """生成自签名 HTTPS 证书"""
+
     print("🔐 正在生成自签名证书...")
-    try:
-        # 使用 openssl 命令行工具生成证书
-        subprocess.check_call([
-            'openssl', 'req', '-x509', '-newkey', 'rsa:2048',
-            '-keyout', 'key.pem', '-out', 'cert.pem',
-            '-days', '365', '-nodes', '-subj',
-            '/C=CN/ST=Local/O=Python HTTPS Server/CN=localhost'
-        ])
-        print("✅ 证书已生成: cert.pem, key.pem")
-        return True
-    except subprocess.CalledProcessError:
-        print("❌ 生成证书失败，请确保系统已安装 openssl 命令行工具。")
-        return False
-    except OSError:
-        print("❌ 找不到 openssl 命令，请确保系统已安装并配置到环境变量中。")
-        return False
+
+    # RSA 私钥
+    key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048,
+    )
+
+    subject = issuer = x509.Name([
+        x509.NameAttribute(NameOID.COUNTRY_NAME, "CN"),
+        x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "Local"),
+        x509.NameAttribute(NameOID.LOCALITY_NAME, "Local"),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Python HTTPS Server"),
+        x509.NameAttribute(NameOID.COMMON_NAME, "localhost"),
+    ])
+
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(issuer)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(datetime.datetime.utcnow() - datetime.timedelta(minutes=1))
+        .not_valid_after(datetime.datetime.utcnow() + datetime.timedelta(days=3650))
+        .add_extension(
+            x509.SubjectAlternativeName([
+                x509.DNSName("localhost"),
+                x509.DNSName("127.0.0.1"),
+            ]),
+            critical=False,
+        )
+        .sign(key, hashes.SHA256())
+    )
+
+    with open(KEY_FILE, "wb") as f:
+        f.write(
+            key.private_bytes(
+                serialization.Encoding.PEM,
+                serialization.PrivateFormat.TraditionalOpenSSL,
+                serialization.NoEncryption(),
+            )
+        )
+
+    with open(CERT_FILE, "wb") as f:
+        f.write(cert.public_bytes(serialization.Encoding.PEM))
+
+    print("✅ 已生成 cert.pem 和 key.pem")
+
+
+def ensure_certificate():
+    """保证证书存在"""
+
+    if os.path.exists(CERT_FILE) and os.path.exists(KEY_FILE):
+        return
+
+    create_self_signed_cert()
+
 
 def run_server(port=8443, directory="."):
-    """启动 HTTPS 服务器"""
     os.chdir(directory)
-    
-    # 检查证书是否存在，不存在则自动生成
-    cert_file = "cert.pem"
-    key_file = "key.pem"
-    
-    if not (os.path.exists(cert_file) and os.path.exists(key_file)):
-        if not create_self_signed_cert():
-            sys.exit(1)
-    
-    # 创建服务器
+
+    ensure_certificate()
+
     handler = SimpleHTTPRequestHandler
-    httpd = HTTPServer(('0.0.0.0', port), handler)
-    
-    # 使用 SSL 上下文方式包装 socket (兼容 Python 2.7.9+ 和 Python 3.x)
-    context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    context.load_cert_chain(cert_file, key_file)
-    httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
-    
-    url = "https://localhost:%d" % port
-    
-    print("\n🚀 HTTPS 服务器已启动")
-    print("📁 共享目录: " + os.path.abspath(directory))
-    print("🔗 访问地址: " + url)
-    print("⚠️  使用自签名证书，浏览器会提示不安全，请选择继续访问")
-    print("按 Ctrl+C 停止服务器\n")
-    
-    # 启动后直接打开浏览器
+
+    httpd = HTTPServer(("0.0.0.0", port), handler)
+
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain(CERT_FILE, KEY_FILE)
+
+    httpd.socket = context.wrap_socket(
+        httpd.socket,
+        server_side=True,
+    )
+
+    url = f"https://localhost:{port}"
+
+    print()
+    print("🚀 HTTPS Server Started")
+    print("📁 Directory :", os.path.abspath(directory))
+    print("🔗 URL       :", url)
+    print("⚠️  浏览器会提示自签名证书，请继续访问")
+    print("按 Ctrl+C 停止服务器")
+    print()
+
     webbrowser.open(url)
-    
+
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("\n👋 服务器已停止")
+        print("\n👋 已停止服务器")
+    finally:
+        httpd.server_close()
+
 
 if __name__ == "__main__":
+
     port = 8443
     directory = "."
-    
-    # 支持命令行参数
+
     if len(sys.argv) > 1:
         try:
             port = int(sys.argv[1])
         except ValueError:
             directory = sys.argv[1]
-    
+
     if len(sys.argv) > 2:
         directory = sys.argv[2]
-    
+
     run_server(port, directory)
