@@ -61,6 +61,7 @@
    B. 方法二：使用 HTTPS 访问（推荐，功能最完整）**
      在解压目录下运行附带的脚本：
      ```bash
+     pip install cryptography
      python https.py
      ```
      脚本会自动调用系统 openssl 生成证书并启动服务。浏览器访问：[https://localhost:8443/](https://localhost:8443/) （浏览器会提示不安全，选择继续访问即可）。
