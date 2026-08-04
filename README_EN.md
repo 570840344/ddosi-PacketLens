@@ -63,6 +63,7 @@ Due to browser security policies restricting local file access (`.mmdb`), local 
    
    Run the included script in the extracted directory:
    ```bash
+   pip install cryptography
    python https.py
    ```
    The script will automatically use system openssl to generate a certificate and start the service. Access in browser: [https://localhost:8443/](https://localhost:8443/) (The browser will prompt a security warning; choose to proceed/ignore).
